@@ -74,24 +74,34 @@ export default function App() {
                 <kbd className="dock-k">⌘K</kbd>
               </div>
               <div className="dock-body">
-                <span className="dock-title">Nothing open yet</span>
-                <span className="dock-sub s">
-                  The palette is one keystroke away, whenever you need it.
-                </span>
                 {last ? (
-                  <button
-                    type="button"
-                    className="dock-last"
-                    title="Open the palette on this"
-                    onClick={() => setOpen(true)}
-                  >
-                    <span className="faint s">last opened</span>
-                    <span className="dock-last-row">
-                      <span className="dock-last-title">{last.title}</span>
-                      <span className="faint s">{last.at}</span>
+                  <>
+                    <span className="dock-flag s">last opened</span>
+                    <span className="dock-title">{last.title}</span>
+                    <span className="dock-sub s">
+                      {last.kind.toLowerCase()} ran at {last.at}, run it again or open the palette
+                      to search on.
                     </span>
-                  </button>
-                ) : null}
+                    <button
+                      type="button"
+                      className="dock-last"
+                      title="Run this again"
+                      onClick={() => run(last.command)}
+                    >
+                      <span className="dock-last-row">
+                        <span className="dock-last-title">{last.title}</span>
+                        <span className="faint s">{last.at}</span>
+                      </span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="dock-title">Nothing open yet</span>
+                    <span className="dock-sub s">
+                      The palette is one keystroke away, whenever you need it.
+                    </span>
+                  </>
+                )}
               </div>
               <div className="dock-foot">
                 <button
