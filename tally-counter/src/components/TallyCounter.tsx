@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { animate, motion, useMotionValue, useReducedMotion, useTransform } from "framer-motion";
 
 const MIN = 0;
@@ -6,10 +6,19 @@ const MAX = 9999;
 const DIGITS = 4;
 const TILES = 30;
 const TILE_MAX = 28;
+const AUTO_MS = 600;
+const STEP_MAX = 999;
 
 function startTile(roll: number) {
   const digit = ((roll % 10) + 10) % 10;
   return digit === 0 ? 10 : digit;
+}
+
+function clampStep(value: number) {
+  if (Number.isNaN(value)) {
+    return 1;
+  }
+  return Math.min(STEP_MAX, Math.max(1, Math.floor(value)));
 }
 
 function RollWheel({
@@ -167,10 +176,12 @@ export interface TallyCounterProps {
   step?: number;
 }
 
-export function TallyCounter({ step = 1 }: TallyCounterProps) {
-  const stepSize = Math.max(1, Math.floor(step));
+export function TallyCounter({ step: initialStep = 1 }: TallyCounterProps) {
   const reduced = Boolean(useReducedMotion());
+  const stepId = useId();
   const [count, setCount] = useState(MIN);
+  const [step, setStep] = useState(() => clampStep(initialStep));
+  const [auto, setAuto] = useState(false);
 
   const atMin = count <= MIN;
   const atMax = count >= MAX;
@@ -185,25 +196,69 @@ export function TallyCounter({ step = 1 }: TallyCounterProps) {
     if (atMax) {
       return;
     }
-    move(stepSize);
-  }, [atMax, stepSize, move]);
+    move(step);
+  }, [atMax, step, move]);
 
   const decrement = useCallback(() => {
     if (atMin) {
       return;
     }
-    move(-stepSize);
-  }, [atMin, stepSize, move]);
+    move(-step);
+  }, [atMin, step, move]);
 
   const reset = useCallback(() => {
     setCount((current) => (current === MIN ? current : MIN));
   }, []);
+
+  const toggleAuto = useCallback(() => {
+    setAuto((current) => (atMax ? false : !current));
+  }, [atMax]);
+
+  const adjustStep = useCallback((delta: number) => {
+    setStep((current) => clampStep(current + delta));
+  }, []);
+
+  const handleStepChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value.trim();
+    if (raw === "") {
+      return;
+    }
+    setStep(clampStep(Number(raw)));
+  };
+
+  // auto engine: one tick every AUTO_MS, rolling by the current step
+  useEffect(() => {
+    if (!auto || atMax) {
+      return;
+    }
+    const id = window.setInterval(() => {
+      move(step);
+    }, AUTO_MS);
+    return () => window.clearInterval(id);
+  }, [auto, atMax, step, move]);
+
+  useEffect(() => {
+    if (atMax) {
+      setAuto(false);
+    }
+  }, [atMax]);
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.repeat || event.metaKey || event.ctrlKey || event.altKey) {
         return;
       }
+
+      const target = event.target;
+      if (
+        target instanceof HTMLElement &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
       if (event.key === "+" || event.key === "=") {
         event.preventDefault();
         increment();
@@ -213,14 +268,28 @@ export function TallyCounter({ step = 1 }: TallyCounterProps) {
       } else if (event.key === "r" || event.key === "R") {
         event.preventDefault();
         reset();
+      } else if (event.key === "a" || event.key === "A") {
+        event.preventDefault();
+        toggleAuto();
       }
     }
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [increment, decrement, reset]);
+  }, [increment, decrement, reset, toggleAuto]);
 
   const significant = DIGITS - String(count).length;
+
+  let statusText: string;
+  if (atMax) {
+    statusText = "At max. Reset to keep counting.";
+  } else if (auto) {
+    statusText = `Auto counting by ${step}.`;
+  } else if (atMin) {
+    statusText = "At zero.";
+  } else {
+    statusText = `Counting by ${step}.`;
+  }
 
   return (
     <section
@@ -256,7 +325,7 @@ export function TallyCounter({ step = 1 }: TallyCounterProps) {
               onClick={decrement}
               disabled={atMin}
             >
-              − {stepSize}
+              − {step}
             </button>
             <button
               type="button"
@@ -268,22 +337,63 @@ export function TallyCounter({ step = 1 }: TallyCounterProps) {
             </button>
             <button
               type="button"
+              className="tally-button tally-button-auto"
+              data-auto={auto ? "true" : "false"}
+              aria-pressed={auto}
+              onClick={toggleAuto}
+              disabled={atMax}
+            >
+              auto
+            </button>
+            <button
+              type="button"
               className="tally-button"
               onClick={increment}
               disabled={atMax}
             >
-              + {stepSize}
+              + {step}
             </button>
+          </div>
+
+          <div className="tally-step">
+            <label className="tally-step-label" htmlFor={stepId}>
+              count by
+            </label>
+            <div className="tally-step-control">
+              <button
+                type="button"
+                className="tally-step-btn"
+                onClick={() => adjustStep(-1)}
+                disabled={step <= 1}
+                aria-label="Smaller step"
+              >
+                −
+              </button>
+              <input
+                id={stepId}
+                className="tally-step-input"
+                type="number"
+                min={1}
+                max={STEP_MAX}
+                value={step}
+                onChange={handleStepChange}
+                inputMode="numeric"
+                aria-label="Step size"
+              />
+              <button
+                type="button"
+                className="tally-step-btn"
+                onClick={() => adjustStep(1)}
+                disabled={step >= STEP_MAX}
+                aria-label="Bigger step"
+              >
+                +
+              </button>
+            </div>
           </div>
         </div>
 
-        <p className="tally-status">
-          {atMax
-            ? "At max. Reset to keep counting."
-            : atMin
-              ? "At zero."
-              : `Counting by ${stepSize}.`}
-        </p>
+        <p className="tally-status">{statusText}</p>
 
         <span className="sr-only" role="status">
           {count}
