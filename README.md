@@ -11,6 +11,7 @@ paper and ink surfaces with one loud accent; states stay bold; no filler copy.
 | --------------- | --------------------------------------------------------------------- |
 | `otp-input`     | One-time code as six combination-lock wheels. Digits roll, the gate points, wrong codes rattle and eject, success clicks forward wheel by wheel. |
 | `command-palette` | Palette-as-app on black. Fuzzy match with per-character lighting, a live preview pane, Recent re-runs and a sleep-state dock. |
+| `tally-counter` | Four-wheel odometer counter. Digits roll direction-aware with carry, leading zeros rest dim, one loud press states the clicker. |
 
 ## Running a project
 
