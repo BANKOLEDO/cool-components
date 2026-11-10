@@ -1,0 +1,350 @@
+@import "tailwindcss";
+
+/* tally — mechanical counter. own design system, shared law:
+   flat everything; no shadows, no gradients, no glows;
+   paper and ink with one loud accent; states stay bold; no filler copy. */
+
+:root {
+  --tally-page: #ddd5c2;
+  --tally-paper: #f8f5ec;
+  --tally-ink: #141714;
+  --tally-muted: #6f6e66;
+  --tally-dim: #b4b0a2;
+  --tally-line: rgba(20, 23, 20, 0.18);
+  --tally-gate: rgba(20, 23, 20, 0.3);
+  --tally-accent: #e8481c;
+
+  /* fluid scale — one token drives wheel, digit and clicker */
+  --tally-tile-h: clamp(62px, 15vh, 96px);
+  --tally-wheel-w: calc(var(--tally-tile-h) * 0.72);
+  --tally-digit: calc(var(--tally-tile-h) * 0.64);
+  --tally-gap: clamp(5px, 1.4vw, 9px);
+  --tally-click: clamp(104px, 24vh, 132px);
+
+  --tally-font-sans: "Manrope Variable", "Avenir Next", "Segoe UI", sans-serif;
+  --tally-font-mono: "JetBrains Mono Variable", "SFMono-Regular", monospace;
+
+  color-scheme: light;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  min-width: 320px;
+  background: var(--tally-page);
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  overflow-x: hidden;
+  background: var(--tally-page);
+  color: var(--tally-ink);
+  font-family: var(--tally-font-sans);
+  font-weight: 450;
+  line-height: 1.4;
+  touch-action: manipulation;
+}
+
+button {
+  font: inherit;
+  border-radius: 0;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  color: inherit;
+}
+
+::selection {
+  background: rgba(232, 72, 28, 0.22);
+  color: var(--tally-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--tally-accent);
+  outline-offset: 3px;
+}
+
+/* page */
+
+.tally-app {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+  padding: 28px 18px;
+  background: var(--tally-page);
+}
+
+.tally-frame {
+  display: flex;
+  width: min(440px, 100%);
+  flex-direction: column;
+}
+
+/* head */
+
+.tally-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0 4px 18px;
+}
+
+.tally-head-title {
+  color: var(--tally-ink);
+  font-size: 15px;
+  font-weight: 800;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+}
+
+.tally-head-meta {
+  color: var(--tally-muted);
+  font-family: var(--tally-font-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+/* body */
+
+.tally-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: clamp(24px, 4.5vh, 40px) 0;
+  border-top: 1px solid var(--tally-ink);
+  border-bottom: 1px solid var(--tally-ink);
+}
+
+/* readout */
+
+.tally-readout {
+  display: flex;
+  gap: var(--tally-gap);
+}
+
+.tally-wheel {
+  position: relative;
+  display: block;
+  width: var(--tally-wheel-w);
+  height: var(--tally-tile-h);
+  overflow: hidden;
+  border: 1px solid var(--tally-line);
+  border-radius: calc(var(--tally-tile-h) * 0.14);
+  background: var(--tally-paper);
+}
+
+.tally-wheel[data-dim="true"] {
+  border-color: rgba(20, 23, 20, 0.1);
+}
+
+.tally-strip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  will-change: transform;
+}
+
+.tally-tile {
+  display: grid;
+  height: var(--tally-tile-h);
+  flex: 0 0 var(--tally-tile-h);
+  place-items: center;
+  color: var(--tally-ink);
+  font-family: var(--tally-font-mono);
+  font-size: var(--tally-digit);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  user-select: none;
+}
+
+.tally-wheel[data-dim="true"] .tally-tile {
+  color: var(--tally-dim);
+}
+
+.tally-gate {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  margin-top: -0.5px;
+  background: var(--tally-gate);
+  pointer-events: none;
+}
+
+.tally-wheel[data-dim="true"] .tally-gate {
+  background: rgba(20, 23, 20, 0.16);
+}
+
+/* clicker */
+
+.tally-clicker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--tally-click);
+  height: var(--tally-click);
+  margin-top: clamp(24px, 5vh, 40px);
+  border: 1.5px solid var(--tally-ink);
+  border-radius: 50%;
+  background: var(--tally-ink);
+  color: var(--tally-paper);
+  transition:
+    transform 110ms ease,
+    background 110ms ease,
+    border-color 110ms ease;
+}
+
+.tally-clicker[data-down="true"] {
+  transform: translateY(5px) scale(0.96);
+  background: var(--tally-accent);
+  border-color: var(--tally-accent);
+}
+
+.tally-clicker:disabled {
+  cursor: default;
+  opacity: 0.45;
+}
+
+.tally-clicker-glyph {
+  font-family: var(--tally-font-mono);
+  font-size: calc(var(--tally-click) * 0.3);
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
+}
+
+.tally-hint {
+  margin-top: clamp(12px, 2.4vh, 18px);
+  color: var(--tally-muted);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+/* controls */
+
+.tally-controls {
+  display: flex;
+  width: 100%;
+  gap: 8px;
+  margin-top: clamp(20px, 4.4vh, 34px);
+}
+
+.tally-button {
+  flex: 1;
+  height: 42px;
+  padding: 0 10px;
+  border: 1px solid var(--tally-ink);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tally-ink);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  transition:
+    transform 100ms ease,
+    background 130ms ease,
+    color 130ms ease,
+    opacity 130ms ease;
+}
+
+.tally-button:hover {
+  background: var(--tally-ink);
+  color: var(--tally-paper);
+}
+
+.tally-button:active {
+  transform: translateY(1px);
+}
+
+.tally-button:disabled {
+  cursor: default;
+  opacity: 0.4;
+}
+
+.tally-button:disabled:hover {
+  background: transparent;
+  color: var(--tally-ink);
+}
+
+.tally-button-reset {
+  border-style: dashed;
+}
+
+/* status */
+
+.tally-status {
+  margin: clamp(12px, 2.6vh, 20px) 4px 0;
+  color: var(--tally-muted);
+  font-family: var(--tally-font-mono);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+/* utility */
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* short viewports: keep everything on one screen */
+
+@media (max-height: 640px) {
+  .tally-app {
+    padding: 14px 16px;
+  }
+
+  .tally-head {
+    padding-bottom: 12px;
+  }
+}
+
+/* reduced motion */
+
+.tally-app[data-reduced-motion="true"] *,
+.tally-app[data-reduced-motion="true"] *::before,
+.tally-app[data-reduced-motion="true"] *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+  scroll-behavior: auto !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tally-app *,
+  .tally-app *::before,
+  .tally-app *::after {
+    animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+}
